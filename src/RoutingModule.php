@@ -2,6 +2,7 @@
 
 namespace Chizu\Routing;
 
+use Chizu\Event\Event;
 use Chizu\Module\Module;
 
 class RoutingModule extends Module
@@ -15,16 +16,18 @@ class RoutingModule extends Module
     {
         parent::__construct();
 
-        $this->dispatcher->listen(self::InitiationEvent, function () {
+        $this->dispatcher->set(self::InitiationEvent, new Event([function () {
             $this->onInitiation();
-        });
+        }]));
     }
 
     protected function onInitiation(): void
     {
-        $this->dispatcher->listen(self::SearchEvent, function (Routes $routes, string $url) {
+        $this->dispatcher->set(self::SearchEvent, new Event([function (Routes $routes, string $url) {
             $this->onSearch($routes, $url);
-        });
+        }]));
+
+        $this->setInitiated(true);
     }
 
     protected function onSearch(Routes $routes, string $url): void
