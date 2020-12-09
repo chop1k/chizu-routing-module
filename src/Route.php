@@ -2,8 +2,6 @@
 
 namespace Chizu\Routing;
 
-use InvalidArgumentException;
-
 class Route
 {
     protected string $name;
@@ -42,21 +40,33 @@ class Route
         $this->pattern = $pattern;
     }
 
-    public function __construct(string $name = "", string $pattern = "")
+    protected string $controller;
+
+    /**
+     * @return string
+     */
+    public function getController(): string
+    {
+        return $this->controller;
+    }
+
+    /**
+     * @param string $controller
+     */
+    public function setController(string $controller): void
+    {
+        $this->controller = $controller;
+    }
+
+    public function __construct(string $name = "", string $pattern = "", string $controller = "")
     {
         $this->name = $name;
         $this->pattern = $pattern;
+        $this->controller = $controller;
     }
 
     public function match(string $url): bool
     {
-        $result = preg_match($this->pattern, $url);
-
-        if ($result === false)
-        {
-            throw new InvalidArgumentException(sprintf('Cannot match given string "%s" and pattern "%s"', $url, $this->pattern));
-        }
-
-        return $result;
+        return $url === $this->pattern;
     }
 }
