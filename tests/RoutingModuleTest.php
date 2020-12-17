@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use Chizu\Event\Dispatcher;
 use Chizu\Event\Event;
+use Chizu\Event\Events;
 use Chizu\Routing\Route;
 use Chizu\Routing\Routes;
 use Chizu\Routing\RoutingModule;
@@ -13,15 +13,15 @@ class RoutingModuleTest extends TestCase
 {
     protected RoutingModule $module;
 
-    protected Dispatcher $dispatcher;
+    protected Events $events;
 
     protected function setUp(): void
     {
         $this->module = new RoutingModule();
 
-        $this->dispatcher = $this->module->getDispatcher();
+        $this->events = $this->module->getEvents();
 
-        $this->dispatcher->dispatch(RoutingModule::InitiationEvent);
+        $this->events->get(RoutingModule::InitiationEvent)->execute();
     }
 
     public function getRoutes(): array
@@ -48,14 +48,17 @@ class RoutingModuleTest extends TestCase
      */
     public function testSearchEvent($routes, $url, $expected): void
     {
-        $this->dispatcher->set(RoutingModule::RouteFoundEvent, new Event([function (Route $route) use ($expected) {
+        $this->events->set(RoutingModule::RouteFoundEvent, Event::createByCallback(function (Route $route) use ($expected) {
             self::assertEquals($expected, $route->getName());
-        }]));
+        }));
 
-        $this->dispatcher->set(RoutingModule::RouteNotFoundEvent, new Event([function () {
-            self::assertTrue(false);
-        }]));
+        $this->events->set(RoutingModule::RouteNotFoundEvent, Event::createByMethod($this, 'onRouteNotFound'));
 
-        $this->dispatcher->dispatch(RoutingModule::SearchEvent, $routes, $url);
+        $this->events->get(RoutingModule::SearchEvent)->execute($routes, $url);
+    }
+
+    protected function onRouteNotFound(): void
+    {
+        self::assertTrue(false);
     }
 }

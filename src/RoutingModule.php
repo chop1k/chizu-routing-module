@@ -16,16 +16,12 @@ class RoutingModule extends Module
     {
         parent::__construct();
 
-        $this->dispatcher->set(self::InitiationEvent, new Event([function () {
-            $this->onInitiation();
-        }]));
+        $this->events->set(self::InitiationEvent, Event::createByMethod($this, 'onInitiation'));
     }
 
     protected function onInitiation(): void
     {
-        $this->dispatcher->set(self::SearchEvent, new Event([function (Routes $routes, string $url) {
-            $this->onSearch($routes, $url);
-        }]));
+        $this->events->set(self::SearchEvent, Event::createByMethod($this, 'onSearch'));
 
         $this->setInitiated(true);
     }
@@ -36,11 +32,11 @@ class RoutingModule extends Module
 
         if (is_null($result))
         {
-            $this->dispatcher->dispatch(self::RouteNotFoundEvent, $url);
+            $this->events->get(self::RouteNotFoundEvent)->execute();
         }
         else
         {
-            $this->dispatcher->dispatch(self::RouteFoundEvent, $result);
+            $this->events->get(self::RouteFoundEvent)->execute($result);
         }
     }
 }
