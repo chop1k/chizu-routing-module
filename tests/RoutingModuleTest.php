@@ -2,26 +2,24 @@
 
 namespace Tests;
 
+use Chizu\DI\Container;
 use Chizu\Event\Event;
 use Chizu\Event\Events;
 use Chizu\Routing\Route;
 use Chizu\Routing\Routes;
 use Chizu\Routing\RoutingModule;
+use Ds\Map;
 use PHPUnit\Framework\TestCase;
 
 class RoutingModuleTest extends TestCase
 {
     protected RoutingModule $module;
 
-    protected Events $events;
-
     protected function setUp(): void
     {
-        $this->module = new RoutingModule();
+        $this->module = new RoutingModule(new Events(), new Container(), new Map());
 
-        $this->events = $this->module->getEvents();
-
-        $this->events->get(RoutingModule::InitiationEvent)->execute();
+        $this->module->getEvents()->get(RoutingModule::InitiationEvent)->execute();
     }
 
     public function getRoutes(): array
@@ -48,13 +46,15 @@ class RoutingModuleTest extends TestCase
      */
     public function testSearchEvent($routes, $url, $expected): void
     {
-        $this->events->set(RoutingModule::RouteFoundEvent, Event::createByCallback(function (Route $route) use ($expected) {
+        $events = $this->module->getEvents();
+
+        $events->set(RoutingModule::RouteFoundEvent, Event::createByCallback(function (Route $route) use ($expected) {
             self::assertEquals($expected, $route->getName());
         }));
 
-        $this->events->set(RoutingModule::RouteNotFoundEvent, Event::createByMethod($this, 'onRouteNotFound'));
+        $events->set(RoutingModule::RouteNotFoundEvent, Event::createByMethod($this, 'onRouteNotFound'));
 
-        $this->events->get(RoutingModule::SearchEvent)->execute($routes, $url);
+        $events->get(RoutingModule::SearchEvent)->execute($routes, $url);
     }
 
     protected function onRouteNotFound(): void
