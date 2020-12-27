@@ -48,17 +48,17 @@ class RoutingModuleTest extends TestCase
     {
         $events = $this->module->getEvents();
 
-        $events->set(RoutingModule::RouteFoundEvent, Event::createByCallback(function (Route $route) use ($expected) {
-            self::assertEquals($expected, $route->getName());
+        $events->set(RoutingModule::ResultEvent, Event::createByCallback(function (?Route $route) use ($expected) {
+            if (!is_null($route))
+            {
+                self::assertEquals($expected, $route->getName());
+            }
+            else
+            {
+                self::assertTrue(false);
+            }
         }));
 
-        $events->set(RoutingModule::RouteNotFoundEvent, Event::createByMethod($this, 'onRouteNotFound'));
-
         $events->get(RoutingModule::SearchEvent)->execute($routes, $url);
-    }
-
-    protected function onRouteNotFound(): void
-    {
-        self::assertTrue(false);
     }
 }
